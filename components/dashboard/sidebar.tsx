@@ -20,7 +20,7 @@ export default function Sidebar({ role }: { role: string }) {
   const links = role === "admin" ? adminLinks : vendedorLinks;
 
   return (
-     <aside className="w-64 bg-zinc-900 text-white min-h-screen p-4 flex flex-col">
+     <aside className="w-64 bg-slate-800 text-white min-h-screen p-4 flex flex-col">
       <h2 className="text-xl font-bold mb-6">Crokids</h2>
 
       <nav className="flex flex-col gap-3 flex-1">
@@ -31,7 +31,7 @@ export default function Sidebar({ role }: { role: string }) {
             <Link
               key={link.name}
               href={link.href}
-              className="flex items-center gap-3 p-2 rounded hover:bg-zinc-800"
+              className="flex items-center gap-3 p-2 rounded hover:bg-slate-700"
             >
               <Icon size={18} />
               {link.name}
