@@ -1,10 +1,8 @@
-import { Suspense } from "react";
-import ProtectedContent from "./ProtectedContent";
-
-export default function ProtectedPage() {
+export default function DashboardPage() {
   return (
-    <Suspense fallback={<div>Carregando...</div>}>
-      <ProtectedContent />
-    </Suspense>
+    <div>
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <p>Bem vindo ao sistema de pedidos.</p>
+    </div>
   );
 }
