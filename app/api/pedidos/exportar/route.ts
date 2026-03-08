@@ -1,10 +1,8 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from "next/server";
+import { createClientFromRequest } from "@/lib/supabase/server";
 import { getUserProfile } from "@/lib/getUserProfile";
 
-export const dynamic = "force-dynamic";
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const profile = await getUserProfile();
     if (!profile) {
@@ -19,9 +17,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Datas obrigatórias" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createClientFromRequest(request);
 
-    // Produtos ordenados pelo prefixo numérico (01-, 02-, ...)
     const { data: produtosData } = await supabase
       .from("produtos")
       .select("nome")
@@ -30,7 +27,6 @@ export async function GET(request: Request) {
 
     const produtos = (produtosData ?? []).map((p) => p.nome);
 
-    // Fim do dia = inclui o dia inteiro
     const fimDia = new Date(fim);
     fimDia.setDate(fimDia.getDate() + 1);
 
@@ -59,7 +55,6 @@ export async function GET(request: Request) {
       .lt("created_at", fimDia.toISOString())
       .order("created_at", { ascending: true });
 
-    // Vendedor só vê os próprios pedidos
     if (profile.role !== "admin") {
       query = query.eq("codigo_vendedor", profile.codigo_vendedor);
     }

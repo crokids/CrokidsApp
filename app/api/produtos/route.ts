@@ -1,11 +1,9 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server"; // ajuste o caminho do seu supabase server client
+import { NextRequest, NextResponse } from "next/server";
+import { createClientFromRequest } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = createClientFromRequest(request);
 
     const { data, error } = await supabase
       .from("produtos")
@@ -34,7 +32,11 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const normalized = (data ?? []).map((p) => ({ ...p, unidades_produto: p.unidades_produto ?? [] }));
+    const normalized = (data ?? []).map((p) => ({
+      ...p,
+      unidades_produto: p.unidades_produto ?? [],
+    }));
+
     return NextResponse.json(normalized);
   } catch (error) {
     console.error("[GET /api/produtos] Unexpected error:", error);
