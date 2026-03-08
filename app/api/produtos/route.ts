@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server"; // ajuste o caminho do seu supabase server client
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const supabase = await createClient();
