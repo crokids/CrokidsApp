@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClientFromRequest } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { getUserProfile } from "@/lib/getUserProfile";
+import { connection } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
+  await connection();
+
   try {
     const profile = await getUserProfile();
     if (!profile) {
@@ -17,7 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Datas obrigatórias" }, { status: 400 });
     }
 
-    const supabase = createClientFromRequest(request);
+    const supabase = await createClient();
 
     const { data: produtosData } = await supabase
       .from("produtos")
