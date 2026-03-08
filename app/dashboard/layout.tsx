@@ -8,7 +8,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Suspense fallback={<Spinner />}>
+    <Suspense fallback={<Spinner  fullscreen/>}>
       <div className="min-h-screen bg-background text-foreground">
         <DashboardLoader>{children}</DashboardLoader>
       </div>

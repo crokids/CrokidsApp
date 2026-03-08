@@ -43,8 +43,10 @@ type Props = {
 };
 
 export default function ExportarClient({ isAdmin }: Props) {
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
+  const hoje = new Date().toISOString().split("T")[0];
+
+  const [dataInicio, setDataInicio] = useState(hoje);
+  const [dataFim, setDataFim] = useState(hoje);
   const [pedidos, setPedidos] = useState<PedidoExport[]>([]);
   const [produtos, setProdutos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);

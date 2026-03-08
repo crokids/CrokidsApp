@@ -13,6 +13,7 @@ export default function Sidebar({ role }: { role: string }) {
 
   const adminLinks = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Usuários", href: "/dashboard/usuarios", icon: Users },
     { name: "Realizar Pedido", href: "/dashboard/pedidos", icon: ShoppingCart },
     { name: "Clientes", href: "/dashboard/clientes", icon: Users },
     { name: "Produtos", href: "/dashboard/produtos", icon: Package },
