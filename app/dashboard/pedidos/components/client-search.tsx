@@ -4,18 +4,16 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
+import type { Client } from "@/lib/schemas/types";
 
-type Client = {
-  codcli: number;
-  fantasia: string;
-  razao: string;
-  cidade: string;
+type Props = {
+  selected: Client | null;
+  onSelect: (client: Client | null) => void;
 };
 
-export default function ClientSearch() {
+export default function ClientSearch({ selected, onSelect }: Props) {
   const [search, setSearch] = useState("");
   const [clients, setClients] = useState<Client[]>([]);
-  const [selected, setSelected] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
 
   const debouncedSearch = useDebounce(search, 500);
@@ -30,16 +28,12 @@ export default function ClientSearch() {
 
     fetch(`/api/clientes?search=${debouncedSearch}`)
       .then((res) => res.json())
-      .then((data) => {
-        setClients(data);
-      })
+      .then((data) => setClients(data))
       .finally(() => setLoading(false));
-
   }, [debouncedSearch]);
 
   return (
     <div className="space-y-3 relative">
-
       {selected ? (
         <div className="border rounded-lg p-3 bg-muted flex justify-between">
           <div>
@@ -48,9 +42,8 @@ export default function ClientSearch() {
               {selected.codcli} - {selected.cidade}
             </p>
           </div>
-
           <button
-            onClick={() => setSelected(null)}
+            onClick={() => onSelect(null)}
             className="text-sm text-destructive"
           >
             trocar
@@ -66,7 +59,6 @@ export default function ClientSearch() {
 
           {(loading || clients.length > 0) && (
             <div className="absolute bg-popover border rounded-md w-full mt-1 shadow-md max-h-60 overflow-auto z-10 p-2">
-
               {loading && (
                 <div className="flex justify-center py-4">
                   <Spinner />
@@ -78,20 +70,18 @@ export default function ClientSearch() {
                   <div
                     key={client.codcli}
                     onClick={() => {
-                      setSelected(client);
+                      onSelect(client);
                       setClients([]);
                       setSearch("");
                     }}
                     className="p-3 cursor-pointer hover:bg-muted rounded-md"
                   >
                     <p className="font-medium">{client.razao}</p>
-
                     <p className="text-xs text-muted-foreground">
                       {client.codcli} - {client.cidade}
                     </p>
                   </div>
                 ))}
-
             </div>
           )}
         </>

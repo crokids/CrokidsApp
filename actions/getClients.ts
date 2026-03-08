@@ -16,7 +16,7 @@ export async function getClients(search: string) {
     query = supabase
       .from("clientes")
       .select("codcli, fantasia, razao, cidade, codven")
-      .eq("codcli", Number(search))
+      .ilike("codcli_string", `%${search}%`)
       .limit(20);
   } else {
     query = supabase

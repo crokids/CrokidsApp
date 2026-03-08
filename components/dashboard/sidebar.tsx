@@ -13,14 +13,15 @@ export default function Sidebar({ role }: { role: string }) {
 
   const adminLinks = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Pedidos", href: "/dashboard/pedidos", icon: ShoppingCart },
+    { name: "Realizar Pedido", href: "/dashboard/pedidos", icon: ShoppingCart },
     { name: "Clientes", href: "/dashboard/clientes", icon: Users },
     { name: "Produtos", href: "/dashboard/produtos", icon: Package },
     { name: "Exportar", href: "/dashboard/export", icon: Download },
   ];
 
   const vendedorLinks = [
-    { name: "Pedidos", href: "/dashboard/pedidos", icon: ShoppingCart },
+    { name: "Realizar Pedido", href: "/dashboard/pedidos", icon: ShoppingCart },
+    { name: "Pedidos", href: "/dashboard/export", icon: Download },
   ];
 
   const links = role === "admin" ? adminLinks : vendedorLinks;

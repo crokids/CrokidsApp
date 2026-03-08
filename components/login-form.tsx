@@ -38,10 +38,13 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
+
+      // router.refresh() força o Next.js a re-buscar os cookies de sessão
+      // no servidor antes de navegar — necessário em produção
+      router.refresh();
       router.push("/dashboard");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Erro ao fazer login");
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +93,7 @@ export function LoginForm({
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </div>
           </form>
