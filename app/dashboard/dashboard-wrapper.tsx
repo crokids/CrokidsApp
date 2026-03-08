@@ -24,10 +24,9 @@ export default function DashboardShell({
       {/* Sidebar Mobile */}
       <MobileSidebar role={role} open={open} setOpen={setOpen} />
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <Topbar setOpen={setOpen} />
-
-        <main className="p-6 bg-gray-50 min-h-screen">{children}</main>
+        <main className="p-6 bg-background min-h-screen">{children}</main>
       </div>
     </div>
   );

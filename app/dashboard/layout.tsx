@@ -9,7 +9,9 @@ export default function DashboardLayout({
 }) {
   return (
     <Suspense fallback={<Spinner />}>
-      <DashboardLoader>{children}</DashboardLoader>
+      <div className="min-h-screen bg-background text-foreground">
+        <DashboardLoader>{children}</DashboardLoader>
+      </div>
     </Suspense>
   );
 }

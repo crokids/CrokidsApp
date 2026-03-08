@@ -1,8 +1,10 @@
 export default function DashboardPage() {
   return (
-    <div>
+    <div className="p-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p>Bem vindo ao sistema de pedidos.</p>
+      <p className="text-muted-foreground">
+        Bem vindo ao sistema de pedidos.
+      </p>
     </div>
   );
 }
