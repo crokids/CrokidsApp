@@ -69,7 +69,9 @@ export default function UsuariosClient() {
   const [salvando, setSalvando] = useState(false);
 
   // Dialog deletar
-  const [usuarioParaDeletar, setUsuarioParaDeletar] = useState<Usuario | null>(null);
+  const [usuarioParaDeletar, setUsuarioParaDeletar] = useState<Usuario | null>(
+    null,
+  );
   const [deletando, setDeletando] = useState(false);
 
   // ── Busca usuários ──────────────────────────────────────────────────────────
@@ -78,7 +80,10 @@ export default function UsuariosClient() {
     try {
       const res = await fetch("/api/usuarios");
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error); return; }
+      if (!res.ok) {
+        toast.error(data.error);
+        return;
+      }
       setUsuarios(data);
       console.log(data);
     } catch {
@@ -88,7 +93,9 @@ export default function UsuariosClient() {
     }
   };
 
-  useEffect(() => { fetchUsuarios(); }, []);
+  useEffect(() => {
+    fetchUsuarios();
+  }, []);
 
   // ── Abrir dialog ────────────────────────────────────────────────────────────
   const abrirCriar = () => {
@@ -137,13 +144,18 @@ export default function UsuariosClient() {
           method: editando ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error); return; }
+      if (!res.ok) {
+        toast.error(data.error);
+        return;
+      }
 
-      toast.success(editando ? "Usuário atualizado." : "Usuário criado com sucesso.");
+      toast.success(
+        editando ? "Usuário atualizado." : "Usuário criado com sucesso.",
+      );
       setDialogOpen(false);
       fetchUsuarios();
     } catch {
@@ -162,7 +174,10 @@ export default function UsuariosClient() {
         method: "DELETE",
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error); return; }
+      if (!res.ok) {
+        toast.error(data.error);
+        return;
+      }
       toast.success("Usuário removido.");
       setUsuarios((prev) => prev.filter((u) => u.id !== usuarioParaDeletar.id));
     } catch {
@@ -194,7 +209,9 @@ export default function UsuariosClient() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            {loading ? "Carregando..." : `${usuarios.length} usuário${usuarios.length !== 1 ? "s" : ""}`}
+            {loading
+              ? "Carregando..."
+              : `${usuarios.length} usuário${usuarios.length !== 1 ? "s" : ""}`}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -205,29 +222,32 @@ export default function UsuariosClient() {
           ) : (
             <div className="divide-y">
               {usuarios.map((u) => (
-                <div key={u.id} className="flex items-center gap-3 px-6 py-3 hover:bg-muted/40 transition-colors">
+                <div
+                  key={u.id}
+                  className="flex items-center gap-3 px-6 py-3 hover:bg-muted/40 transition-colors"
+                >
                   <UserCircle className="w-9 h-9 text-muted-foreground shrink-0" />
 
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm">{u.nome ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {u.codigo_vendedor && u.codigo_vendedor !== "0"
+                        ? `Cod.vendedor: ${u.codigo_vendedor}`
+                        : "Sem código de vendedor"}
+                    </p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
 
                   {/* Role */}
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                    u.role === "admin"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}>
+                  <span
+                    className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                      u.role === "admin"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
                     {u.role ?? "—"}
                   </span>
-
-                  {/* Código vendedor */}
-                  {u.codigo_vendedor != "0"  && (
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      Cod.vendedor - {u.codigo_vendedor}
-                    </span>
-                  )}
 
                   {/* Último acesso */}
                   <span className="text-xs text-muted-foreground w-24 text-right shrink-0 hidden sm:block">
@@ -261,7 +281,9 @@ export default function UsuariosClient() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editando ? "Editar Usuário" : "Novo Usuário"}</DialogTitle>
+            <DialogTitle>
+              {editando ? "Editar Usuário" : "Novo Usuário"}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
@@ -273,7 +295,9 @@ export default function UsuariosClient() {
                   type="email"
                   placeholder="email@exemplo.com"
                   value={form.email}
-                  onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, email: e.target.value }))
+                  }
                 />
               </div>
             )}
@@ -284,7 +308,9 @@ export default function UsuariosClient() {
               <Input
                 placeholder="Nome completo"
                 value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, nome: e.target.value }))
+                }
               />
             </div>
 
@@ -293,7 +319,9 @@ export default function UsuariosClient() {
               <Label>Role</Label>
               <Select
                 value={form.role}
-                onValueChange={(v) => setForm((f) => ({ ...f, role: v as "admin" | "vendedor" }))}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, role: v as "admin" | "vendedor" }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -311,28 +339,47 @@ export default function UsuariosClient() {
               <Input
                 placeholder="ex: 09"
                 value={form.codigo_vendedor}
-                onChange={(e) => setForm((f) => ({ ...f, codigo_vendedor: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, codigo_vendedor: e.target.value }))
+                }
               />
             </div>
 
             {/* Senha */}
             <div className="space-y-1">
-              <Label>{editando ? "Nova senha (deixe vazio para não alterar)" : "Senha"}</Label>
+              <Label>
+                {editando
+                  ? "Nova senha (deixe vazio para não alterar)"
+                  : "Senha"}
+              </Label>
               <Input
                 type="password"
                 placeholder={editando ? "••••••••" : "mínimo 6 caracteres"}
                 value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, password: e.target.value }))
+                }
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={salvando}>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={salvando}
+            >
               Cancelar
             </Button>
             <Button onClick={handleSalvar} disabled={salvando}>
-              {salvando ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Salvando...</> : "Salvar"}
+              {salvando ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -341,13 +388,17 @@ export default function UsuariosClient() {
       {/* Dialog confirmar exclusão */}
       <AlertDialog
         open={usuarioParaDeletar !== null}
-        onOpenChange={(open) => { if (!open) setUsuarioParaDeletar(null); }}
+        onOpenChange={(open) => {
+          if (!open) setUsuarioParaDeletar(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover usuário?</AlertDialogTitle>
             <AlertDialogDescription>
-              O usuário <strong>{usuarioParaDeletar?.nome}</strong> ({usuarioParaDeletar?.email}) será removido permanentemente do sistema.
+              O usuário <strong>{usuarioParaDeletar?.nome}</strong> (
+              {usuarioParaDeletar?.email}) será removido permanentemente do
+              sistema.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -357,7 +408,11 @@ export default function UsuariosClient() {
               onClick={handleDeletar}
               disabled={deletando}
             >
-              {deletando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Remover"}
+              {deletando ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Remover"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
