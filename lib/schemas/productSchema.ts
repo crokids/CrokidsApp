@@ -11,6 +11,7 @@ export const productSchema = z.object({
   descricao: z.string().optional(),
   img_url: z.string().optional(),
   ativo: z.boolean(),
+  gramatura: z.number({ message: "Informe a gramatura" }).min(1, "Gramatura inválida"),
   unidades: z.array(unitSchema).min(1, "Adicione ao menos uma unidade"),
 });
 

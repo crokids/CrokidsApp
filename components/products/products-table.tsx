@@ -1,31 +1,19 @@
+// products-table.tsx
 "use client";
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useTransition, useState } from "react";
 import { deleteProduct } from "@/actions/product/deleteProduct";
-
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead,
+  TableHeader, TableRow,
 } from "@/components/ui/table";
-
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
 import { Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 
@@ -38,13 +26,19 @@ type Produto = {
   unidades_produto: { id: string }[];
 };
 
-export default function ProductsTable({ produtos }: { produtos: Produto[] }) {
+// ✅ Adicionado currentPage como prop
+export default function ProductsTable({
+  produtos,
+  currentPage = 1,
+}: {
+  produtos: Produto[];
+  currentPage?: number;
+}) {
   const [isPending, startTransition] = useTransition();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   function handleDelete() {
     if (!selectedId) return;
-
     startTransition(async () => {
       await deleteProduct(selectedId);
     });
@@ -80,19 +74,15 @@ export default function ProductsTable({ produtos }: { produtos: Produto[] }) {
                   <div className="w-10 h-10 bg-muted rounded-md" />
                 )}
               </TableCell>
-
               <TableCell className="font-medium">{produto.nome}</TableCell>
-
               <TableCell>{produto.unidades_produto.length}</TableCell>
-
               <TableCell>{produto.ativo ? "Ativo" : "Inativo"}</TableCell>
-
               <TableCell>
                 {new Date(produto.created_at).toLocaleDateString()}
               </TableCell>
-
               <TableCell className="text-right space-x-2">
-                <Link href={`/dashboard/produtos/${produto.id}`}>
+                {/* ✅ Passa page atual no link */}
+                <Link href={`/dashboard/produtos/${produto.id}?page=${currentPage}`}>
                   <Button size="icon" variant="outline">
                     <Pencil size={16} />
                   </Button>
@@ -108,22 +98,16 @@ export default function ProductsTable({ produtos }: { produtos: Produto[] }) {
                       <Trash size={16} />
                     </Button>
                   </AlertDialogTrigger>
-
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Deletar produto
-                      </AlertDialogTitle>
-
+                      <AlertDialogTitle>Deletar produto</AlertDialogTitle>
                       <AlertDialogDescription>
                         Essa ação não pode ser desfeita. Isso irá remover
                         permanentemente este produto.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-
                       <AlertDialogAction
                         onClick={handleDelete}
                         disabled={isPending}

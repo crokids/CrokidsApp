@@ -48,8 +48,7 @@ export async function GET(request: Request) {
         pedido_itens (
           nome_produto,
           nome_unidade,
-          quantidade,
-          quantidade_unidade,
+          quantidade_tiras,
           preco_unitario,
           subtotal
         )

@@ -8,7 +8,6 @@ export async function createProduct(data: unknown) {
   const supabase = await createClient();
 
   const parsed = productSchema.parse(data);
-
   const { unidades, ...produto } = parsed;
 
   const { data: createdProduct, error: productError } = await supabase
@@ -18,13 +17,12 @@ export async function createProduct(data: unknown) {
       descricao: produto.descricao,
       img_url: produto.img_url,
       ativo: produto.ativo,
+      gramatura: produto.gramatura,
     })
     .select()
     .single();
 
-  if (productError) {
-    throw new Error("Erro ao criar produto");
-  }
+  if (productError) throw new Error("Erro ao criar produto");
 
   const unidadesInsert = unidades.map((u) => ({
     produto_id: createdProduct.id,
@@ -38,9 +36,7 @@ export async function createProduct(data: unknown) {
     .from("unidades_produto")
     .insert(unidadesInsert);
 
-  if (unitError) {
-    throw new Error("Erro ao criar unidades");
-  }
+  if (unitError) throw new Error("Erro ao criar unidades");
 
   revalidatePath("/dashboard/produtos");
 

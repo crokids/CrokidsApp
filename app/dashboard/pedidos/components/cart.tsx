@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2, ShoppingCart } from "lucide-react";
 import type { Client, CartItem } from "@/lib/schemas/types";
 import Image from "next/image";
+import { quantidadeEmTiras, precoPorTira } from "@/lib/pedido-utils";
 
 type Props = {
   client: Client | null;
@@ -14,7 +15,10 @@ type Props = {
 };
 
 /** Separa gramatura e sabor. Ex: "30GR QUEIJO" → ["30GR", "QUEIJO"] */
-function splitDescricao(descricao: string): { gramatura: string; sabor: string } {
+function splitDescricao(descricao: string): {
+  gramatura: string;
+  sabor: string;
+} {
   const match = descricao.match(/^(\d+\s*GR)\s*(.+)$/i);
   if (match) return { gramatura: match[1].toUpperCase(), sabor: match[2] };
   return { gramatura: "", sabor: descricao };
@@ -27,10 +31,19 @@ export default function Cart({
   onUpdateQuantity,
   onConfirm,
 }: Props) {
-  const totalPrice = cartItems.reduce(
-    (acc, i) => acc + Number(i.unidade.preco) * i.quantidade,
-    0,
-  );
+  const totalPrice = cartItems.reduce((acc, i) => {
+    const tiras = quantidadeEmTiras(
+      i.quantidade,
+      i.unidade.nome_unidade,
+      i.produto.gramatura,
+    );
+    const preco = precoPorTira(
+      Number(i.unidade.preco),
+      i.unidade.nome_unidade,
+      i.produto.gramatura,
+    );
+    return acc + tiras * preco;
+  }, 0);
 
   if (!client) {
     return (
@@ -55,9 +68,21 @@ export default function Cart({
         {cartItems.map((item) => {
           const { gramatura, sabor } = splitDescricao(item.produto.descricao);
 
+          // ✅ Converte tudo para tiras
+          const tiras = quantidadeEmTiras(
+            item.quantidade,
+            item.unidade.nome_unidade,
+            item.produto.gramatura,
+          );
+          const precoTira = precoPorTira(
+            Number(item.unidade.preco),
+            item.unidade.nome_unidade,
+            item.produto.gramatura,
+          );
+          const subtotal = tiras * precoTira;
+
           return (
             <div key={item.key} className="py-3 flex items-center gap-3">
-
               {/* Imagem */}
               {item.produto.img_url ? (
                 <Image
@@ -71,7 +96,7 @@ export default function Cart({
                 <div className="w-11 h-11 rounded bg-muted shrink-0" />
               )}
 
-              {/* Nome: gramatura + sabor em linhas separadas */}
+              {/* Nome */}
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground font-medium leading-tight">
                   {gramatura}
@@ -79,15 +104,19 @@ export default function Cart({
                 <p className="text-sm font-semibold leading-tight truncate">
                   {sabor}
                 </p>
+                {/* ✅ Sempre em tiras */}
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.unidade.nome_unidade} · R$ {Number(item.unidade.preco).toFixed(2)}/un
+                  {tiras} tira{tiras !== 1 ? "s" : ""} · R${" "}
+                  {precoTira.toFixed(2)}/tira
                 </p>
               </div>
 
-              {/* Controle de quantidade */}
+              {/* Controle de quantidade — mantém a unidade que o vendedor selecionou */}
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={() => onUpdateQuantity(item.key, item.quantidade - 1)}
+                  onClick={() =>
+                    onUpdateQuantity(item.key, item.quantidade - 1)
+                  }
                   className="w-7 h-7 rounded-full border flex items-center justify-center hover:bg-muted transition-colors text-sm"
                 >
                   −
@@ -96,19 +125,20 @@ export default function Cart({
                   {item.quantidade}
                 </span>
                 <button
-                  onClick={() => onUpdateQuantity(item.key, item.quantidade + 1)}
+                  onClick={() =>
+                    onUpdateQuantity(item.key, item.quantidade + 1)
+                  }
                   className="w-7 h-7 rounded-full border flex items-center justify-center hover:bg-muted transition-colors text-sm"
                 >
                   +
                 </button>
               </div>
 
-              {/* Subtotal */}
+              {/* ✅ Subtotal em tiras */}
               <p className="text-sm font-semibold w-16 text-right tabular-nums shrink-0">
-                R$ {(Number(item.unidade.preco) * item.quantidade).toFixed(2)}
+                R$ {subtotal.toFixed(2)}
               </p>
 
-              {/* Remover */}
               <button
                 onClick={() => onRemove(item.key)}
                 className="text-muted-foreground hover:text-destructive transition-colors shrink-0"

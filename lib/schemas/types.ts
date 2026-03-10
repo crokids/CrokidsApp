@@ -22,6 +22,7 @@ export type Produto = {
   img_url: string | null;
   descricao: string;
   ativo: boolean;
+  gramatura: number;
   unidades_produto: UnidadeProduto[];
 };
 

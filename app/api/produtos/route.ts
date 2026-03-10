@@ -16,6 +16,7 @@ export async function GET() {
         img_url,
         descricao,
         ativo,
+        gramatura,  
         created_at,
         unidades_produto (
           id,

@@ -6,13 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import type { Client, CartItem } from "@/lib/schemas/types";
+import { quantidadeEmTiras, precoPorTira } from "@/lib/pedido-utils";
 
 type TipoPagamento = "AV" | "AP";
-
-type Rascunho = {
-  client: Client;
-  cartItems: CartItem[];
-};
+type Rascunho = { client: Client; cartItems: CartItem[] };
 
 export default function ConfirmarPedidoPage() {
   const router = useRouter();
@@ -38,11 +35,21 @@ export default function ConfirmarPedidoPage() {
 
   const { client, cartItems } = rascunho;
 
-  const total = cartItems.reduce(
-    (acc, i) => acc + Number(i.unidade.preco) * i.quantidade,
-    0,
-  );
-
+  // Total calculado sempre em tiras
+  const total = cartItems.reduce((acc, i) => {
+    const tiras = quantidadeEmTiras(
+      i.quantidade,
+      i.unidade.nome_unidade,
+      i.produto.gramatura,
+    );
+    const preco = precoPorTira(
+      Number(i.unidade.preco),
+      i.unidade.nome_unidade,
+      i.produto.gramatura,
+    );
+    return acc + tiras * preco;
+  }, 0);
+  
   const handleConfirmar = async () => {
     setLoading(true);
     setError(null);
@@ -89,7 +96,6 @@ export default function ConfirmarPedidoPage() {
     <div className="space-y-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold">Confirmar Pedido</h1>
 
-      {/* Cliente */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Cliente</CardTitle>
@@ -102,7 +108,6 @@ export default function ConfirmarPedidoPage() {
         </CardContent>
       </Card>
 
-      {/* Itens */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Itens do Pedido</CardTitle>
@@ -110,9 +115,18 @@ export default function ConfirmarPedidoPage() {
         <CardContent>
           <div className="divide-y">
             {cartItems.map((item) => {
-              const qtdUnidade =
-                item.quantidade * item.unidade.quantidade_salgadinho;
-              const subtotal = Number(item.unidade.preco) * item.quantidade;
+              const tiras = quantidadeEmTiras(
+                item.quantidade,
+                item.unidade.nome_unidade,
+                item.produto.gramatura,
+              );
+              const precoTira = precoPorTira(
+                Number(item.unidade.preco),
+                item.unidade.nome_unidade,
+                item.produto.gramatura,
+              );
+              const subtotal = tiras * precoTira;
+
               return (
                 <div
                   key={item.key}
@@ -123,10 +137,19 @@ export default function ConfirmarPedidoPage() {
                       {item.produto.descricao}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {item.unidade.nome_unidade} · {item.quantidade}x{" → "}
-                      <span className="font-medium text-foreground">
-                        {qtdUnidade} un
-                      </span>
+                      {/* Se selecionou Fardo, mostra a conversão. Se Tira, mostra direto */}
+                      {item.unidade.nome_unidade === "Fardo" ? (
+                        <>
+                          {item.quantidade}x Fardo{" "}
+                          <span className="text-foreground font-medium">
+                            → {tiras} tira{tiras !== 1 ? "s" : ""}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-foreground font-medium">
+                          {tiras} tira{tiras !== 1 ? "s" : ""}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <p className="text-sm font-semibold tabular-nums shrink-0">
@@ -143,9 +166,7 @@ export default function ConfirmarPedidoPage() {
         </CardContent>
       </Card>
 
-      {/* Pagamento + NF lado a lado */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Tipo de Pagamento */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Pagamento</CardTitle>
@@ -172,7 +193,6 @@ export default function ConfirmarPedidoPage() {
           </CardContent>
         </Card>
 
-        {/* Nota Fiscal */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Nota Fiscal</CardTitle>

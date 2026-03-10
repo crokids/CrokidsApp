@@ -59,7 +59,7 @@ export default async function ProdutosPage({
 
       <ProductsSearch />
 
-      <ProductsTable produtos={produtos ?? []} />
+      <ProductsTable produtos={produtos ?? []} currentPage={currentPage} />
 
       <ProductsPagination page={currentPage} totalPages={totalPages} />
     </div>

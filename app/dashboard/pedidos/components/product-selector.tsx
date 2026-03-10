@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { Plus, Check } from "lucide-react";
+import {
+  validarQuantidadeTiras,
+} from "@/lib/pedido-utils";
 import type {
   Client,
   Produto,
@@ -44,6 +47,7 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [erroQuantidade, setErroQuantidade] = useState<string | null>(null);
 
   // Seleções step-by-step
   const [gramaturaSelected, setGramaturaSelected] = useState<string | null>(
@@ -105,11 +109,12 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
   const handleSelectProduto = (p: Produto) => {
     setProdutoSelected(p);
     setUnidadeSelected(null);
+    setErroQuantidade(null);
     setQuantidade(1);
   };
-
   const handleSelectUnidade = (u: UnidadeProduto) => {
     setUnidadeSelected(u);
+    setErroQuantidade(null);
     setQuantidade(1);
   };
 
@@ -118,12 +123,20 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
   const handleAdd = () => {
     if (!produtoSelected || !unidadeSelected || quantidade < 1) return;
 
-    onAdd(produtoSelected, unidadeSelected, quantidade);
+    const erro = validarQuantidadeTiras(
+      quantidade,
+      unidadeSelected.nome_unidade,
+      produtoSelected.gramatura,
+    );
+    if (erro) {
+      setErroQuantidade(erro);
+      return;
+    }
 
+    setErroQuantidade(null);
+    onAdd(produtoSelected, unidadeSelected, quantidade);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
-
-    // Mantém gramatura selecionada para facilitar adicionar mais do mesmo tipo
     setProdutoSelected(null);
     setUnidadeSelected(null);
     setQuantidade(1);
@@ -329,6 +342,9 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
               </>
             )}
           </Button>
+          {erroQuantidade && (
+            <p className="text-sm text-destructive">{erroQuantidade}</p>
+          )}
         </div>
       )}
 

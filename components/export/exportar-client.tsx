@@ -15,13 +15,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Download, Loader2, ChevronRight, ChevronDown, Trash2 } from "lucide-react";
+import {
+  Download,
+  Loader2,
+  ChevronRight,
+  ChevronDown,
+  Trash2,
+} from "lucide-react";
 
 type ItemPedido = {
   nome_produto: string;
   nome_unidade: string;
-  quantidade: number;
-  quantidade_unidade: number;
+  quantidade_tiras: number; // ✅
   preco_unitario: number;
   subtotal: number;
 };
@@ -54,7 +59,9 @@ export default function ExportarClient({ isAdmin }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [expandido, setExpandido] = useState<Set<number>>(new Set());
   const [deletando, setDeletando] = useState<number | null>(null);
-  const [pedidoParaDeletar, setPedidoParaDeletar] = useState<number | null>(null);
+  const [pedidoParaDeletar, setPedidoParaDeletar] = useState<number | null>(
+    null,
+  );
 
   const toggleExpandir = (id: number) => {
     setExpandido((prev) => {
@@ -69,13 +76,21 @@ export default function ExportarClient({ isAdmin }: Props) {
   };
 
   const handleBuscar = async () => {
-    if (!dataInicio || !dataFim) { setError("Selecione as duas datas."); return; }
+    if (!dataInicio || !dataFim) {
+      setError("Selecione as duas datas.");
+      return;
+    }
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/pedidos/exportar?inicio=${dataInicio}&fim=${dataFim}`);
+      const res = await fetch(
+        `/api/pedidos/exportar?inicio=${dataInicio}&fim=${dataFim}`,
+      );
       const data = await res.json();
-      if (!res.ok) { setError(data.error); return; }
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
       setPedidos(data.pedidos);
       setProdutos(data.produtos);
       setExpandido(new Set());
@@ -90,7 +105,9 @@ export default function ExportarClient({ isAdmin }: Props) {
     setDeletando(id);
     setPedidoParaDeletar(null);
     try {
-      const res = await fetch(`/api/pedidos/delete/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/pedidos/delete/${id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
         const d = await res.json();
         toast.error("Erro ao excluir pedido", { description: d.error });
@@ -110,20 +127,34 @@ export default function ExportarClient({ isAdmin }: Props) {
     setExportando(true);
     try {
       const header = [
-        "Data", "Cod_cli", "cod_vendedor", "tipo_pgt", "nf", "obs",
-        ...produtos.flatMap((_, i) => [`Produto${i + 1}`, `Quantidade${i + 1}`]),
+        "Data",
+        "Cod_cli",
+        "cod_vendedor",
+        "tipo_pgt",
+        "nf",
+        "obs",
+        ...produtos.flatMap((_, i) => [
+          `Produto${i + 1}`,
+          `Quantidade${i + 1}`,
+        ]),
       ].join(";");
 
       const linhas = pedidos.map((p) => {
         const qtdMap: Record<string, number> = {};
-        p.itens.forEach((item) => { qtdMap[item.nome_produto] = item.quantidade_unidade; });
+        p.itens.forEach((item) => {
+          qtdMap[item.nome_produto] = item.quantidade_tiras;
+        });
 
         const d = new Date(p.created_at);
         const data = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
 
         return [
-          data, p.codcli, p.codigo_vendedor, p.tipo_pagamento,
-          p.nf ? "true" : "false", "",
+          data,
+          p.codcli,
+          p.codigo_vendedor,
+          p.tipo_pagamento,
+          p.nf ? "true" : "false",
+          "",
           ...produtos.flatMap((nome) => [nome, String(qtdMap[nome] ?? 0)]),
         ].join(";");
       });
@@ -149,7 +180,9 @@ export default function ExportarClient({ isAdmin }: Props) {
 
       {/* Filtros */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Filtro por período</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">Filtro por período</CardTitle>
+        </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3 items-end">
             <div className="space-y-1">
@@ -175,12 +208,21 @@ export default function ExportarClient({ isAdmin }: Props) {
               />
             </div>
             <Button onClick={handleBuscar} disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Buscar"}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Buscar"
+              )}
             </Button>
 
             {/* Botão CSV apenas para admin */}
             {isAdmin && pedidos.length > 0 && (
-              <Button variant="outline" onClick={handleExportar} disabled={exportando} className="gap-2">
+              <Button
+                variant="outline"
+                onClick={handleExportar}
+                disabled={exportando}
+                className="gap-2"
+              >
                 <Download className="w-4 h-4" />
                 Exportar CSV ({pedidos.length} pedidos)
               </Button>
@@ -195,7 +237,8 @@ export default function ExportarClient({ isAdmin }: Props) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              {pedidos.length} pedido{pedidos.length !== 1 && "s"} encontrado{pedidos.length !== 1 && "s"}
+              {pedidos.length} pedido{pedidos.length !== 1 && "s"} encontrado
+              {pedidos.length !== 1 && "s"}
             </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
@@ -226,40 +269,57 @@ export default function ExportarClient({ isAdmin }: Props) {
                         onClick={() => toggleExpandir(p.id)}
                       >
                         <td className="px-3 py-2 text-muted-foreground">
-                          {aberto ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          {aberto ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
                         </td>
-                        <td className="py-2 pr-4 tabular-nums px-3 whitespace-nowrap">{dataFmt}</td>
+                        <td className="py-2 pr-4 tabular-nums px-3 whitespace-nowrap">
+                          {dataFmt}
+                        </td>
                         <td className="py-2 pr-4">
                           <p className="font-medium">{p.nome_cliente}</p>
-                          <p className="text-xs text-muted-foreground">{p.codcli}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {p.codcli}
+                          </p>
                         </td>
                         <td className="py-2 pr-4">{p.codigo_vendedor}</td>
                         <td className="py-2 pr-4">
-                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-                            p.tipo_pagamento === "AV"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-orange-100 text-orange-700"
-                          }`}>
+                          <span
+                            className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                              p.tipo_pagamento === "AV"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-orange-100 text-orange-700"
+                            }`}
+                          >
                             {p.tipo_pagamento}
                           </span>
                         </td>
-                        <td className="py-2 pr-4 text-xs">{p.nf ? "Sim" : "Não"}</td>
+                        <td className="py-2 pr-4 text-xs">
+                          {p.nf ? "Sim" : "Não"}
+                        </td>
                         <td className="py-2 pr-4 text-right tabular-nums font-semibold whitespace-nowrap">
                           R$ {total.toFixed(2)}
                         </td>
-                        <td className="py-2 px-3" onClick={(e) => e.stopPropagation()}>
-                            {isAdmin  && (
-                          <button
-                            onClick={() => setPedidoParaDeletar(p.id)}
-                            disabled={deletando === p.id}
-                            className="text-muted-foreground hover:text-destructive transition-colors"
-                            title="Excluir pedido"
-                          >
-                            {deletando === p.id
-                              ? <Loader2 className="w-4 h-4 animate-spin" />
-                              : <Trash2 className="w-4 h-4" />}
-                          </button>
-                            )}
+                        <td
+                          className="py-2 px-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {isAdmin && (
+                            <button
+                              onClick={() => setPedidoParaDeletar(p.id)}
+                              disabled={deletando === p.id}
+                              className="text-muted-foreground hover:text-destructive transition-colors"
+                              title="Excluir pedido"
+                            >
+                              {deletando === p.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
                         </td>
                       </tr>
 
@@ -269,26 +329,61 @@ export default function ExportarClient({ isAdmin }: Props) {
                             <table className="w-full text-xs">
                               <thead>
                                 <tr className="text-muted-foreground border-b">
-                                  <th className="text-left pb-1.5 font-medium">Produto</th>
-                                  <th className="text-left pb-1.5 font-medium">Unidade</th>
-                                  <th className="text-right pb-1.5 font-medium">Qtd</th>
-                                  <th className="text-right pb-1.5 font-medium">Qtd (un)</th>
-                                  <th className="text-right pb-1.5 font-medium">Preço/un</th>
-                                  <th className="text-right pb-1.5 font-medium">Subtotal</th>
+                                  <th className="text-left pb-1.5 font-medium">
+                                    Produto
+                                  </th>
+                                  <th className="text-right pb-1.5 font-medium">
+                                    Tiras
+                                  </th>
+                                  <th className="text-right pb-1.5 font-medium">
+                                    Fardos equiv.
+                                  </th>
+                                  <th className="text-right pb-1.5 font-medium">
+                                    Preço/tira
+                                  </th>
+                                  <th className="text-right pb-1.5 font-medium">
+                                    Subtotal
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-border/50">
                                 {p.itens.map((item, idx) => {
-                                  const preco = isNaN(Number(item.preco_unitario)) ? 0 : Number(item.preco_unitario);
-                                  const sub = isNaN(Number(item.subtotal)) ? 0 : Number(item.subtotal);
+                                  const preco = isNaN(
+                                    Number(item.preco_unitario),
+                                  )
+                                    ? 0
+                                    : Number(item.preco_unitario);
+                                  const sub = isNaN(Number(item.subtotal))
+                                    ? 0
+                                    : Number(item.subtotal);
+                                  // ✅ Calcula fardos equivalentes — precisa da gramatura do produto
+                                  // Como não temos gramatura no item, deduzimos pelo nome_produto
+                                  const tiras = item.quantidade_tiras;
+                                  const multiplo = item.nome_produto.includes(
+                                    "30GR",
+                                  )
+                                    ? 10
+                                    : 5;
+                                  const fardos = (tiras / multiplo).toFixed(0);
+
                                   return (
                                     <tr key={idx}>
-                                      <td className="py-1.5 font-medium">{item.nome_produto}</td>
-                                      <td className="py-1.5 text-muted-foreground">{item.nome_unidade}</td>
-                                      <td className="py-1.5 text-right tabular-nums">{item.quantidade}</td>
-                                      <td className="py-1.5 text-right tabular-nums">{item.quantidade_unidade}</td>
-                                      <td className="py-1.5 text-right tabular-nums">R$ {preco.toFixed(2)}</td>
-                                      <td className="py-1.5 text-right tabular-nums font-medium">R$ {sub.toFixed(2)}</td>
+                                      <td className="py-1.5 font-medium">
+                                        {item.nome_produto}
+                                      </td>
+                                      <td className="py-1.5 text-right tabular-nums">
+                                        {tiras}
+                                      </td>
+                                      <td className="py-1.5 text-right tabular-nums text-muted-foreground">
+                                        {fardos} fardo
+                                        {Number(fardos) !== 1 ? "s" : ""}
+                                      </td>
+                                      <td className="py-1.5 text-right tabular-nums">
+                                        R$ {preco.toFixed(2)}
+                                      </td>
+                                      <td className="py-1.5 text-right tabular-nums font-medium">
+                                        R$ {sub.toFixed(2)}
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -309,20 +404,25 @@ export default function ExportarClient({ isAdmin }: Props) {
       {/* Dialog de confirmação */}
       <AlertDialog
         open={pedidoParaDeletar !== null}
-        onOpenChange={(open) => { if (!open) setPedidoParaDeletar(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPedidoParaDeletar(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir pedido?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O pedido e todos os seus itens serão removidos permanentemente.
+              Esta ação não pode ser desfeita. O pedido e todos os seus itens
+              serão removidos permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => pedidoParaDeletar && handleDeletar(pedidoParaDeletar)}
+              onClick={() =>
+                pedidoParaDeletar && handleDeletar(pedidoParaDeletar)
+              }
             >
               Excluir
             </AlertDialogAction>
