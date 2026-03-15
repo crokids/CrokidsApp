@@ -1,8 +1,13 @@
 "use client";
 
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ShieldOff, Package, ShoppingBag } from "lucide-react";
@@ -19,7 +24,7 @@ type Pedido = {
 };
 
 type PedidoMes = {
-  mes: string;   // "Jan", "Fev" ...
+  mes: string; // "Jan", "Fev" ...
   total: number;
 };
 
@@ -44,9 +49,7 @@ export default function DashboardClient({
 }: Props) {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">
-        Olá, {nomeVendedor} 👋
-      </h1>
+      <h1 className="text-2xl font-bold">Olá, {nomeVendedor} 👋</h1>
 
       {/* ── Cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -56,7 +59,9 @@ export default function DashboardClient({
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums">{clientesAtivos}</p>
+              <p className="text-2xl font-bold tabular-nums">
+                {clientesAtivos}
+              </p>
               <p className="text-xs text-muted-foreground">Clientes ativos</p>
             </div>
           </CardContent>
@@ -68,7 +73,9 @@ export default function DashboardClient({
               <ShieldOff className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold tabular-nums">{clientesBloqueados}</p>
+              <p className="text-2xl font-bold tabular-nums">
+                {clientesBloqueados}
+              </p>
               <p className="text-xs text-muted-foreground">Bloqueados</p>
             </div>
           </CardContent>
@@ -101,7 +108,6 @@ export default function DashboardClient({
 
       {/* ── Gráfico + Últimos pedidos ──────────────────────────────────── */}
       <div className="grid md:grid-cols-2 gap-4">
-
         {/* Gráfico de barras */}
         <Card>
           <CardHeader>
@@ -127,8 +133,19 @@ export default function DashboardClient({
                 <Tooltip
                   formatter={(v) => [Number(v), "Pedidos"]}
                   cursor={{ fill: "hsl(var(--muted))" }}
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                  itemStyle={{ color: "hsl(var(--foreground))" }}
                 />
-                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="total"
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -141,17 +158,30 @@ export default function DashboardClient({
           </CardHeader>
           <CardContent>
             {ultimosPedidos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum pedido ainda.</p>
+              <p className="text-sm text-muted-foreground">
+                Nenhum pedido ainda.
+              </p>
             ) : (
               <div className="divide-y">
                 {ultimosPedidos.map((p) => (
-                  <div key={p.id} className="py-2.5 flex items-center justify-between gap-2">
+                  <div
+                    key={p.id}
+                    className="py-2.5 flex items-center justify-between gap-2"
+                  >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{p.nome_cliente}</p>
-                      <p className="text-xs text-muted-foreground">{p.cidade_cliente}</p>
+                      <p className="text-sm font-medium truncate">
+                        {p.nome_cliente}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {p.cidade_cliente}
+                      </p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant={p.tipo_pagamento === "AV" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          p.tipo_pagamento === "AV" ? "default" : "secondary"
+                        }
+                      >
                         {p.tipo_pagamento}
                       </Badge>
                       {p.nf && <Badge variant="outline">NF</Badge>}

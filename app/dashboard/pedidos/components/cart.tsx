@@ -163,7 +163,7 @@ export default function Cart({
         </div>
 
         <Button className="w-full" size="lg" onClick={onConfirm}>
-          Confirmar Pedido
+          Confirmar Itens
         </Button>
       </div>
     </div>

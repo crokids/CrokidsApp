@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { Plus, Check } from "lucide-react";
-import {
-  validarQuantidadeTiras,
-} from "@/lib/pedido-utils";
+import { validarQuantidadeTiras } from "@/lib/pedido-utils";
 import type {
   Client,
   Produto,
@@ -57,7 +55,7 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
   const [unidadeSelected, setUnidadeSelected] = useState<UnidadeProduto | null>(
     null,
   );
-  const [quantidade, setQuantidade] = useState(1);
+  const [quantidade, setQuantidade] = useState<number | "">(1);
 
   // Feedback de adicionado
   const [justAdded, setJustAdded] = useState(false);
@@ -121,10 +119,12 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
   // ── Adicionar ao pedido ───────────────────────────────────────────────────
 
   const handleAdd = () => {
-    if (!produtoSelected || !unidadeSelected || quantidade < 1) return;
+    const quantidadeNumber = Number(quantidade) || 0;
+
+    if (!produtoSelected || !unidadeSelected || quantidadeNumber < 1) return;
 
     const erro = validarQuantidadeTiras(
-      quantidade,
+      quantidadeNumber,
       unidadeSelected.nome_unidade,
       produtoSelected.gramatura,
     );
@@ -134,7 +134,7 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
     }
 
     setErroQuantidade(null);
-    onAdd(produtoSelected, unidadeSelected, quantidade);
+    onAdd(produtoSelected, unidadeSelected, quantidadeNumber);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
     setProdutoSelected(null);
@@ -303,7 +303,10 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setQuantidade((q) => Math.max(1, q - 1))}
+                type="button"
+                onClick={() =>
+                  setQuantidade((q) => Math.max(1, (Number(q) || 1) - 1))
+                }
                 className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-muted transition-colors font-medium"
               >
                 −
@@ -312,13 +315,29 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
                 type="number"
                 min={1}
                 value={quantidade}
-                onChange={(e) =>
-                  setQuantidade(Math.max(1, parseInt(e.target.value) || 1))
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (value === "") {
+                    setQuantidade("");
+                    return;
+                  }
+
+                  const num = Number(value);
+                  if (!isNaN(num)) {
+                    setQuantidade(num);
+                  }
+                }}
+                onBlur={() => {
+                  if (!quantidade || quantidade < 1) {
+                    setQuantidade(1);
+                  }
+                }}
                 className="w-16 text-center"
               />
               <button
-                onClick={() => setQuantidade((q) => q + 1)}
+                type="button"
+                onClick={() => setQuantidade((q) => (Number(q) || 0) + 1)}
                 className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-muted transition-colors font-medium"
               >
                 +
@@ -359,7 +378,12 @@ export default function ProductSelector({ client, cartItems, onAdd }: Props) {
           {" · "}
           {quantidade}x{" · "}
           <span className="font-medium text-foreground">
-            R$ {(Number(unidadeSelected.preco) * quantidade).toFixed(2)}
+            {new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(
+              Number(unidadeSelected.preco) * (Number(quantidade) || 0),
+            )}
           </span>
         </div>
       )}

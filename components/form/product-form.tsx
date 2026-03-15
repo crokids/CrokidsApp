@@ -74,13 +74,12 @@ function getDefaultUnidades(gramatura: number) {
 export default function ProductForm({ product }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Lê a página atual da URL para preservar no botão voltar
   const currentPage = searchParams.get("page") ?? "1";
   const backHref = `/dashboard/produtos?page=${currentPage}`;
 
-  const [loading, setLoading] = useState(false);
+  console.log("Produto recebido no form:", product);
 
-  // Flag para ignorar o useEffect de gramatura durante a carga inicial do produto
+  const [loading, setLoading] = useState(false);
   const isInitialized = useRef(false);
 
   const form = useForm<ProductFormValues>({
@@ -100,10 +99,11 @@ export default function ProductForm({ product }: Props) {
     name: "unidades",
   });
 
-  // ── Carrega produto para edição ───────────────────────────────────────────
+  // Carrega produto para edição
   useEffect(() => {
     if (product) {
-      isInitialized.current = false; // bloqueia o effect de gramatura durante o reset
+      isInitialized.current = false;
+
       form.reset({
         nome: product.nome,
         descricao: product.descricao ?? "",
@@ -117,50 +117,53 @@ export default function ProductForm({ product }: Props) {
         })),
       });
     }
-    // Marca como inicializado após o reset (próximo tick)
+
     setTimeout(() => {
       isInitialized.current = true;
     }, 0);
-  }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [product, form]);
 
-  // Para criação nova (sem product), libera o effect imediatamente
   useEffect(() => {
     if (!product) {
       isInitialized.current = true;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [product]);
 
   const gramaturaWatched = form.watch("gramatura");
-  const tirasWatched = form.watch("unidades.0.preco");
+  const tiraPrecoWatched = form.watch("unidades.0.preco");
 
-  // ── Quando gramatura muda (pelo usuário), recalcula unidades ─────────────
+  // Quando gramatura muda (pelo usuário)
   useEffect(() => {
-    if (!gramaturaWatched) return;
-    // Ignora durante carga inicial do produto em edição
-    if (!isInitialized.current) return;
+    if (!gramaturaWatched || !isInitialized.current) return;
 
     const tirasPorFardo = getTirasPorFardo(gramaturaWatched);
-    const unidades = form.getValues("unidades");
 
-    if (unidades.length === 0) {
+    const currentUnidades = form.getValues("unidades");
+
+    if (currentUnidades.length === 0) {
       replace(getDefaultUnidades(gramaturaWatched));
       return;
     }
 
+    // Atualiza apenas a quantidade do fardo
     form.setValue("unidades.1.quantidade_salgadinho", tirasPorFardo);
-  }, [gramaturaWatched]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [gramaturaWatched, form, replace]);
 
-  // ── Preço da tira muda → calcula preço do fardo automaticamente ──────────
+  // Preço da tira → atualiza preço do fardo
   useEffect(() => {
-    if (tirasWatched === undefined || tirasWatched === null) return;
-    if (!isInitialized.current) return;
+    if (
+      tiraPrecoWatched === undefined ||
+      tiraPrecoWatched === null ||
+      !gramaturaWatched ||
+      !isInitialized.current
+    )
+      return;
 
-    const tirasPorFardo = getTirasPorFardo(gramaturaWatched ?? 30);
-    const precoFardo = Number((Number(tirasWatched) * tirasPorFardo).toFixed(2));
+    const tirasPorFardo = getTirasPorFardo(gramaturaWatched);
+    const precoFardo = Number((tiraPrecoWatched * tirasPorFardo).toFixed(2));
     form.setValue("unidades.1.preco", precoFardo);
-  }, [tirasWatched]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tiraPrecoWatched, gramaturaWatched, form]);
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   async function onSubmit(data: ProductFormValues) {
     try {
       setLoading(true);
@@ -186,12 +189,12 @@ export default function ProductForm({ product }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
-        {/* ── INFORMAÇÕES DO PRODUTO ──────────────────────────────────── */}
+        {/* INFORMAÇÕES DO PRODUTO */}
         <Card>
-          <CardHeader><CardTitle>Informações do Produto</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Informações do Produto</CardTitle>
+          </CardHeader>
           <CardContent className="space-y-6">
-
             <FormField
               control={form.control}
               name="nome"
@@ -213,14 +216,18 @@ export default function ProductForm({ product }: Props) {
                 <FormItem>
                   <FormLabel>Gramatura</FormLabel>
                   <Select
-                    value={field.value ? String(field.value) : ""}
-                    onValueChange={(v) => field.onChange(Number(v))}
+                    key={field.value}
+                    value={field.value != null ? String(field.value) : ""}
+                    onValueChange={(val) => {
+                      field.onChange(val === "" ? undefined : Number(val));
+                    }}
                   >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a gramatura" />
                       </SelectTrigger>
                     </FormControl>
+
                     <SelectContent>
                       {GRAMATURAS.map((g) => (
                         <SelectItem key={g.valor} value={String(g.valor)}>
@@ -229,6 +236,7 @@ export default function ProductForm({ product }: Props) {
                       ))}
                     </SelectContent>
                   </Select>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -271,7 +279,10 @@ export default function ProductForm({ product }: Props) {
                 <FormItem className="flex items-center justify-between border rounded-lg p-4">
                   <FormLabel>Produto ativo</FormLabel>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
                 </FormItem>
               )}
@@ -279,7 +290,7 @@ export default function ProductForm({ product }: Props) {
           </CardContent>
         </Card>
 
-        {/* ── PREÇOS (Tira e Fardo) ───────────────────────────────────── */}
+        {/* PREÇOS */}
         {gramaturaWatched && (
           <Card>
             <CardHeader>
@@ -293,10 +304,16 @@ export default function ProductForm({ product }: Props) {
                   <div>Preço (R$)</div>
                 </div>
 
-                {fields.map((field, index) => {
-                  const qtd = form.watch(`unidades.${index}.quantidade_salgadinho`);
+                {fields.map((fieldItem, index) => {
+                  const qtd = form.watch(
+                    `unidades.${index}.quantidade_salgadinho`,
+                  );
+
                   return (
-                    <div key={field.id} className="grid grid-cols-3 gap-3 p-3 border-t items-center">
+                    <div
+                      key={fieldItem.id}
+                      className="grid grid-cols-3 gap-3 p-3 border-t items-center"
+                    >
                       <p className="text-sm font-medium">
                         {form.watch(`unidades.${index}.nome_unidade`)}
                       </p>
@@ -317,7 +334,9 @@ export default function ProductForm({ product }: Props) {
                                 value={field.value ?? ""}
                                 onChange={(e) =>
                                   field.onChange(
-                                    e.target.value === "" ? "" : Number(e.target.value)
+                                    e.target.value === ""
+                                      ? ""
+                                      : Number(e.target.value),
                                   )
                                 }
                               />
@@ -331,18 +350,15 @@ export default function ProductForm({ product }: Props) {
                 })}
               </div>
 
-              {gramaturaWatched && (
-                <p className="text-xs text-muted-foreground mt-3">
-                  Preço do fardo calculado automaticamente: preço da tira ×{" "}
-                  {getTirasPorFardo(gramaturaWatched)} tiras.
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground mt-3">
+                Preço do fardo calculado automaticamente: preço da tira ×{" "}
+                {getTirasPorFardo(gramaturaWatched)} tiras.
+              </p>
             </CardContent>
           </Card>
         )}
 
         <div className="flex gap-3">
-          {/* Botão voltar preserva a página atual */}
           <Button variant="outline" asChild className="w-full">
             <Link href={backHref}>Voltar</Link>
           </Button>
